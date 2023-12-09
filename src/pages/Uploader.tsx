@@ -1,73 +1,88 @@
+import React, { useState } from 'react';
 import { PageContainer } from '@ant-design/pro-components';
-import { Alert, Card, Typography } from 'antd';
-import React from 'react';
-import styles from './Uploader.less';
 import { UploadOutlined } from '@ant-design/icons';
-import type { UploadProps } from 'antd';
-import { Button, message, Upload } from 'antd';
+import { Card, Button, Upload, Slider } from 'antd';
+import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
+import uploader from './../utils/index';
 
-const props: UploadProps = {
-  name: 'file',
-  action: 'https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188',
-  headers: {
-    authorization: 'authorization-text',
-  },
-  onChange(info) {
-    if (info.file.status !== 'uploading') {
-      console.log(info.file, info.fileList);
-    }
-    if (info.file.status === 'done') {
-      message.success(`${info.file.name} file uploaded successfully`);
-    } else if (info.file.status === 'error') {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  },
-  progress: {
-    strokeColor: {
-      '0%': '#108ee9',
-      '100%': '#87d068',
+const Uploader: React.FC = () => {
+  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  console.log(setUploading, setProgress);
+
+  const handleUpload = () => {
+    const formData = new FormData();
+    formData.append('file', fileList[0]);
+
+    uploader.setFile(fileList[0]);
+    uploader.startCutFile();
+    // 规定每次切片的文件大小
+    // const CHUNK_SIZE = 1024 * 1024 * 5; // 5MB
+    // const DefaultChunkSize = 1024 * 5; // 5kb
+    // startCutFile(fileList[0], CHUNK_SIZE);
+    // fileList.forEach((file) => {
+    //   formData.append('files[]', file as RcFile);
+    // });
+    // console.log(fileList);
+    // setUploading(true);
+    // uploadFile(formData)
+    // You can use any AJAX library you like
+    // fetch('http://localhost:8888/login/', {
+    //   method: 'GET',
+    // }).then((res) => {
+    //   console.log(res);
+    // });
+    // fetch('http://localhost:8888/upload/', {
+    //   method: 'POST',
+    //   body: formData,
+    // })
+    //   .then((res) => res.json())
+    //   .then(() => {
+    //     setFileList([]);
+    //     message.success('upload successfully.');
+    //   })
+    //   .catch(() => {
+    //     message.error('upload failed.');
+    //   })
+    //   .finally(() => {
+    //     setUploading(false);
+    //   });
+  };
+
+  const props: UploadProps = {
+    onRemove: (file) => {
+      const index = fileList.indexOf(file);
+      const newFileList = fileList.slice();
+      newFileList.splice(index, 1);
+      setFileList(newFileList);
     },
-    strokeWidth: 3,
-    format: (percent) => percent && `${parseFloat(percent.toFixed(2))}%`,
-  },
-};
+    beforeUpload: (file) => {
+      setFileList([...fileList, file]);
 
-// const CodePreview: React.FC = ({ children }) => (
-//   <pre className={styles.pre}>
-//     <code>
-//       <Typography.Text copyable>{children}</Typography.Text>
-//     </code>
-//   </pre>
-// );
-const Welcome: React.FC = () => {
+      return false;
+    },
+    fileList,
+  };
+
   return (
     <PageContainer>
       <Card>
+        <Slider defaultValue={progress} tooltip={{ open: true }} disabled={true} />
         <Upload {...props}>
-          <Button icon={<UploadOutlined />}>Click to Upload</Button>
+          <Button icon={<UploadOutlined />}>选择文件</Button>
         </Upload>
-        {/* <Alert
-          message={'更快更强的重型组件，已经发布。'}
-          type="success"
-          showIcon
-          banner
-          style={{
-            margin: -12,
-            marginBottom: 24,
-          }}
-        /> */}
-        {/* <Typography.Text strong>
-          <a
-            href="https://procomponents.ant.design/components/table"
-            rel="noopener noreferrer"
-            target="__blank"
-          >
-            欢迎使用
-          </a>
-        </Typography.Text>
-        <CodePreview>yarn add @ant-design/pro-components</CodePreview> */}
+        <Button
+          type="primary"
+          onClick={handleUpload}
+          disabled={fileList.length === 0}
+          loading={uploading}
+          style={{ marginTop: 16 }}
+        >
+          {uploading ? 'Uploading' : '开始上传'}
+        </Button>
       </Card>
     </PageContainer>
   );
 };
-export default Welcome;
+export default Uploader;
